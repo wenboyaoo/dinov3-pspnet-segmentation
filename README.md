@@ -23,7 +23,7 @@ mAcc = 0.8961
 allAcc = 0.9595
 ```
 
-# Reproduction
+## Reproduction
 1. Clone
 ```
 git clone https://github.com/wenboyaoo/semseg-dinov3-pspnet
@@ -55,17 +55,15 @@ bash tool/eval.sh
 
 ### Dataset
 
-All experiments are conducted on **PASCAL VOC 2012** semantic segmentation benchmark (21 classes including background):
+All experiments are conducted on the PASCAL VOC 2012 semantic segmentation benchmark, which contains 21 classes including background.
 
 - Train: 10,582 images  
 - Val: 1,449 images  
 
----
-
 ### Training Settings
 
-- Input resolution: **224 × 224** (aligned with DINOv3 pretraining)
-- Backbone: **DINOv3 ConvNeXt-Tiny (frozen)**
+- Input resolution: 224 × 224 (aligned with DINOv3 pretraining)
+- Backbone: DINOv3 ConvNeXt-Tiny (frozen)
 - Optimizer: SGD  
   - Initial LR: 0.01  
   - Momentum: 0.9  
@@ -78,26 +76,22 @@ All experiments are conducted on **PASCAL VOC 2012** semantic segmentation bench
   - Random scaling (0.5–2.0)
   - Random rotation (±10°)
 
----
-
 ### Evaluation Metrics
 
 - mIoU
 - Mean Accuracy (mAcc)
 - Overall Accuracy (allAcc)
 
----
+### Model Variants
 
-## Model Variants
+The following architectures are evaluated to analyze the contribution of each component:
 
-We evaluate the following architectures to analyze the contribution of each component:
-
-- **ResNet50 + PSPNet (baseline)**
-- **DINOv3 + linear segmentation head**
-- **DINOv3 + PPM**
-- **DINOv3 + FPN**
-- **DINOv3 + FPN + PPM**
-- Different **FPN output channel dimensions**
+- ResNet50 + PSPNet (baseline)
+- DINOv3 + linear segmentation head
+- DINOv3 + PPM
+- DINOv3 + FPN
+- DINOv3 + FPN + PPM
+- Different FPN output channel dimensions
 
 The final architecture is:
 
@@ -109,11 +103,9 @@ PPM (1×1, 2×2, 3×3, 6×6)
 ↓
 Segmentation Head
 
----
+### Quantitative Results
 
-## Quantitative Results
-
-### Ablation Results on VOC 2012 (Val)
+#### Ablation Results on VOC 2012
 
 | # | Model | mIoU | mAcc | allAcc |
 |---|------|------|------|--------|
@@ -128,47 +120,37 @@ Segmentation Head
 | 9 | DINOv3 + FPN + PPM (1024 ch) | 0.8162| 0.9061 | 0.9595 |
 |10 | DINOv3 + FPN + PPM (2048 ch) | 0.8180 | 0.9062 | 0.9597 |
 
----
+### Analysis
 
-## Analysis
-
-### Effect of PPM without Resolution Recovery
+#### Effect of PPM without Resolution Recovery
 
 Directly attaching a PPM to frozen DINOv3 features brings only marginal improvement (Row 2 → 3).  
 Compared with the original PSPNet, mIoU is lower while mAcc is higher, indicating degraded small-object discrimination.
 
-We attribute this to the **large output stride (OS = 32)** of DINOv3 features, where spatial details are severely reduced and PPM pooling bins become excessively coarse.
+This behavior can be attributed to the large output stride (OS = 32) of DINOv3 features, where spatial details are severely reduced and PPM pooling bins become excessively coarse.
 
----
+#### Importance of Output Stride (OS)
 
-### Importance of Output Stride (OS)
-
-Restoring downsampling in the original PSPNet backbone (OS from 8 → 32) leads to a clear performance drop (Row 6 → 7), confirming that **high OS fundamentally limits PSPNet-style context aggregation**.
+Restoring downsampling in the original PSPNet backbone (OS from 8 → 32) leads to a clear performance drop (Row 6 → 7), confirming that high OS fundamentally limits PSPNet-style context aggregation.
 
 Since DINOv3 is designed to be used as a frozen backbone, structural modification or full fine-tuning is undesirable. Therefore, an external multi-scale fusion module is preferred.
 
----
-
-### Effectiveness of FPN
+#### Effectiveness of FPN
 
 Introducing an FPN to fuse multi-stage DINOv3 features and recover spatial resolution (OS = 8) significantly improves segmentation performance (Row 3 → 4 → 5).
 
-Once the resolution bottleneck is removed, **PPM becomes effective again**, leading to consistent gains in mIoU and accuracy.
+Once the resolution bottleneck is removed, PPM becomes effective again, leading to consistent gains in mIoU and accuracy.
 
----
-
-### Impact of FPN Channel Width
+#### Impact of FPN Channel Width
 
 Increasing FPN output channels improves performance (512 → 768 → 1024), but gains saturate beyond 1024 channels.
 
-Considering both accuracy and computational cost, **1024 channels** offer the best trade-off and are used as the default configuration.
+Considering both accuracy and computational cost, 1024 channels offer the best trade-off and are used as the default configuration.
 
----
+### Conclusion
 
-## Conclusion
-
-- **DINOv3 ConvNeXt** serves as a strong frozen feature extractor with robust semantic representations.
-- **Output stride (OS)** is the key factor determining the effectiveness of PSPNet-style architectures.
-- **FPN effectively resolves the resolution bottleneck** of DINOv3 and enables successful dense prediction.
-- **PPM regains effectiveness only after multi-scale spatial information is restored.**
-- The final model (**DINOv3 + FPN + PPM**, 1024 channels) achieves **mIoU 0.8162** on VOC 2012, outperforming the original PSPNet by approximately **+5.9% mIoU**.
+- DINOv3 ConvNeXt serves as a strong frozen feature extractor with robust semantic representations.
+- Output stride is the key factor determining the effectiveness of PSPNet-style architectures.
+- FPN effectively resolves the resolution bottleneck of DINOv3 and enables successful dense prediction.
+- PPM regains effectiveness only after multi-scale spatial information is restored.
+- The final model (DINOv3 + FPN + PPM, 1024 channels) achieves mIoU 0.8162 on VOC 2012, outperforming the original PSPNet by +5.9% mIoU.
