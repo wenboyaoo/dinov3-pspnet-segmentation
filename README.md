@@ -95,13 +95,10 @@ The following architectures are evaluated to analyze the contribution of each co
 
 The final architecture is:
 
-DINOv3 ConvNeXt (frozen)
-↓
-FPN (OS = 8, configurable channels)
-↓
-PPM (1×1, 2×2, 3×3, 6×6)
-↓
-Segmentation Head
+DINOv3 ConvNeXt (frozen) →
+FPN (OS = 8, configurable channels) →
+PPM (1×1, 2×2, 3×3, 6×6) →
+Segmentation Head →
 
 ### Quantitative Results
 
