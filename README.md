@@ -1,5 +1,5 @@
 # Semantic Segmentation with DINOv3 + PSPNet
-Forked and modified from the original CVPR 2017 PSPNet implementation.
+Modified from the original CVPR 2017 PSPNet implementation.
 This version replaces the ResNet backbone with DINOv3 ConvNeXt-Tiny and integrates an FPN module to evaluate how frozen DINOv3 features perform inside the PSPNet framework.
 
 ## Introduction
